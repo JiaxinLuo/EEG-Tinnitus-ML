@@ -1,4 +1,7 @@
+from inspect import trace
 import sys
+import traceback
+import gc
 from pathlib import Path
 from pdb import set_trace as st
 
@@ -15,6 +18,8 @@ from tqdm import tqdm
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
+torch.manual_seed(0)
+np.random.seed(0)
 
 ######################################################################
 # Importing the Dataset
@@ -43,47 +48,110 @@ import os
 
 
 class EEGSubset(torch.utils.data.Dataset):
+
     def __init__(self):
-        dataset_root = Path('/mnt/lustre/OneDrive/sensetime-server-mirror/EEG-Data/Preprocessed-upload') / 'Stand'
+        dataset_root = Path(
+            '/mnt/lustre/OneDrive/sensetime-server-mirror/EEG-Data/Preprocessed-upload'
+        ) / 'Stand'
         tinn_samples = ['AS_tinn_500and5kHz_mcattn-2_sess1_set1_ICAREV.mat']
-        cntl_samples= ['BH_cntl_2-Stream_mcattn-2_sess1_set1_ICAREV.mat']
+        cntl_samples = ['BH_cntl_2-Stream_mcattn-2_sess1_set1_ICAREV.mat']
         self.waves = []
 
         for sample_name in tinn_samples:
             sample_mat = scipy.io.loadmat(str(dataset_root / sample_name))
-            allepochs = sample_mat['allepochs'][0,0].astype(np.float32) # TODO 360, 358, 64
-            allepochs = allepochs.transpose(0, 2, 1) # 360, 64, 358
-            playvecs = sample_mat['playvecs'][0,0] # 1, 360
+            allepochs = sample_mat['allepochs'][0, 0].astype(
+                np.float32)  # TODO 360, 358, 64
+            allepochs = allepochs.transpose(0, 2, 1)  # 360, 64, 358
+            playvecs = sample_mat['playvecs'][0, 0]  # 1, 360
             # st()
             for i in range(allepochs.shape[0]):
                 self.waves.append((allepochs[i], playvecs[0, i], 'tinn', 1))
 
-
         for sample_name in cntl_samples:
             sample_mat = scipy.io.loadmat(str(dataset_root / sample_name))
-            allepochs = sample_mat['allepochs'][0,0].astype(np.float32) # TODO
-            allepochs = allepochs.transpose(0, 2, 1) # 360, 64, 358
-            playvecs = sample_mat['playvecs'][0,0]
+            allepochs = sample_mat['allepochs'][0,
+                                                0].astype(np.float32)  # TODO
+            allepochs = allepochs.transpose(0, 2, 1)  # 360, 64, 358
+            playvecs = sample_mat['playvecs'][0, 0]
             for i in range(allepochs.shape[0]):
                 self.waves.append((allepochs[i], playvecs[0, i], 'cntl', 0))
 
         # todo, preprocess data into independent dataset. high-low-passive; names; 360/540 files.
         # here, just load into the memory for testing
+        gc.collect()
+
     def __len__(self):
         return len(self.waves)
-    
+
     def __getitem__(self, idx):
         return self.waves[idx]
 
 
+class EEGFull(torch.utils.data.Dataset):
+
+    def __init__(
+            self,
+            dataset_root:
+        str = '/mnt/lustre/OneDrive/sensetime-server-mirror/EEG-Data/Preprocessed-upload',
+            subset='Stand',
+            training=True):
+
+        subset_index = (0,0)
+        # subset_index = (0, 1)
+        # subset_index = (1,0)
+        # subset_index = (1,1)
+
+        print('using index', subset_index)
+
+        self.waves = []
+        all_sample_paths = sorted((Path(dataset_root) / subset).glob('*.mat'))
+        if training:
+            # all_sample_paths = all_sample_paths[:-5]
+            all_sample_paths = all_sample_paths[:10]
+        else:
+            all_sample_paths = all_sample_paths[-5:]  # hold out
+            # all_sample_paths = all_sample_paths[5:7]  # hold out
+            # all_sample_paths = all_sample_paths[5:10]  # hold out
+            # all_sample_paths = all_sample_paths[5:15]  # hold out
+
+        for sample_path in all_sample_paths:
+            if 'tinn' in sample_path.stem:
+                label = ('tinn', 1)
+            else:
+                assert 'cntl' in sample_path.stem
+                label = ('cntl', 0)
+            try:
+                sample_mat = scipy.io.loadmat(str(sample_path))
+                allepochs = sample_mat['allepochs'][subset_index].astype(
+                    np.float32)  # TODO 360, 358, 64
+                allepochs = allepochs.transpose(0, 2, 1)  # 360, 64, 358
+                playvecs = sample_mat['playvecs'][subset_index]  # 1, 360
+
+                for i in range(allepochs.shape[0]):
+                    self.waves.append((allepochs[i], playvecs[0, i], *label))
+                del playvecs, allepochs
+            except:
+                traceback.print_exc()
+                st()
+
+        gc.collect()
+
+        # todo, preprocess data into independent dataset. high-low-passive; names; 360/540 files.
+        # here, just load into the memory for testing
+    def __len__(self):
+        return len(self.waves)
+
+    def __getitem__(self, idx):
+        return self.waves[idx]
+
 
 # Create training and testing split of the data. We do not use validation in this tutorial.
-train_set = EEGSubset()
-print(f'dataset size: {len(train_set)}')
-# test_set = SubsetSC("testing")
+train_set = EEGFull(training=True)
+test_set = EEGFull(training=False)
+print(f'train dataset size: {len(train_set)}, test set size: {len(test_set)}')
 
-waveform, playvec, group, label = train_set[0] # 1*358*64, 1/2/3/4, cntl/tinn, 0/1
-
+waveform, playvec, group, label = train_set[
+    0]  # 1*358*64, 1/2/3/4, cntl/tinn, 0/1
 
 ######################################################################
 # A data point in the SPEECHCOMMANDS dataset is a tuple made of a waveform
@@ -91,10 +159,8 @@ waveform, playvec, group, label = train_set[0] # 1*358*64, 1/2/3/4, cntl/tinn, 0
 # the speaker, the number of the utterance.
 #
 
-print("Shape of waveform: {}".format(waveform.shape)) # 1, 16k
+print("Shape of waveform: {}".format(waveform.shape))  # 1, 16k
 # print("Sample rate of waveform: {}".format(sample_rate))
-
-
 
 ######################################################################
 # Let’s find the list of labels available in the dataset.
@@ -104,7 +170,6 @@ print("Shape of waveform: {}".format(waveform.shape)) # 1, 16k
 # labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
 # print('loading labels done')
 # labels
-
 
 ######################################################################
 # Formatting the Data
@@ -125,7 +190,6 @@ print("Shape of waveform: {}".format(waveform.shape)) # 1, 16k
 # transform = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=new_sample_rate)
 # transformed = transform(waveform)
 
-
 ######################################################################
 # To turn a list of data point made of audio recordings and utterances
 # into two batched tensors for the model, we implement a collate function
@@ -138,13 +202,11 @@ print("Shape of waveform: {}".format(waveform.shape)) # 1, 16k
 # encoding.
 #
 
-
 # def pad_sequence(batch):
 #     # Make all tensor in a batch the same length by padding with zeros
 #     batch = [item.t() for item in batch]
 #     batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
 #     return batch.permute(0, 2, 1)
-
 
 # def collate_fn(batch):
 
@@ -164,7 +226,6 @@ print("Shape of waveform: {}".format(waveform.shape)) # 1, 16k
 
 #     return tensors, targets
 
-
 # batch_size = 256
 batch_size = 32
 
@@ -183,17 +244,16 @@ train_loader = torch.utils.data.DataLoader(
     num_workers=num_workers,
     pin_memory=pin_memory,
 )
-test_loader = train_loader
-# test_loader = torch.utils.data.DataLoader(
-#     test_set,
-#     batch_size=batch_size,
-#     shuffle=False,
-#     drop_last=False,
-#     collate_fn=collate_fn,
-#     num_workers=num_workers,
-#     pin_memory=pin_memory,
-# )
-
+# test_loader = train_loader
+test_loader = torch.utils.data.DataLoader(
+    test_set,
+    batch_size=batch_size,
+    shuffle=False,
+    drop_last=False,
+    # collate_fn=collate_fn,
+    num_workers=num_workers,
+    pin_memory=pin_memory,
+)
 
 ######################################################################
 # Define the Network
@@ -214,10 +274,13 @@ test_loader = train_loader
 
 
 class M5(nn.Module):
+
     def __init__(self, n_input=1, n_output=35, stride=1, n_channel=32):
         super().__init__()
         # self.conv1 = nn.Conv1d(n_input, n_channel, kernel_size=80, stride=stride)
-        self.conv1 = nn.Conv1d(n_input, n_channel, kernel_size=16, stride=stride) # 358 / 20 ~= 18, receptive field = 20ms
+        self.conv1 = nn.Conv1d(
+            n_input, n_channel, kernel_size=16,
+            stride=stride)  # 358 / 20 ~= 18, receptive field = 20ms
         self.bn1 = nn.BatchNorm1d(n_channel)
         # self.pool1 = nn.MaxPool1d(4)
         self.pool1 = nn.MaxPool1d(2)
@@ -262,7 +325,8 @@ class M5(nn.Module):
 
 
 # TODO, tune the parameters
-model = M5(n_input=waveform.shape[0], n_output=2, n_channel=32) # binary classification 
+model = M5(n_input=waveform.shape[0], n_output=2,
+           n_channel=32)  # binary classification
 model.to(device)
 print(model)
 
@@ -274,7 +338,6 @@ def count_parameters(model):
 n = count_parameters(model)
 print("Number of parameters: %s" % n)
 
-
 ######################################################################
 # We will use the same optimization technique used in the paper, an Adam
 # optimizer with weight decay set to 0.0001. At first, we will train with
@@ -282,9 +345,11 @@ print("Number of parameters: %s" % n)
 # to 0.001 during training after 20 epochs.
 #
 
-optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0001)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)  # reduce the learning after 20 epochs by a factor of 10
-
+# optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0001)
+optimizer = optim.Adam(model.parameters(), lr=5e-4, weight_decay=0.0001)
+scheduler = optim.lr_scheduler.StepLR(
+    optimizer, step_size=5,
+    gamma=0.1)  # reduce the learning after 20 epochs by a factor of 10
 
 ######################################################################
 # Training and Testing the Network
@@ -300,7 +365,7 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)  # red
 
 def train(model, epoch, log_interval):
     model.train()
-    for batch_idx, (data, playvec, group,  target) in enumerate(train_loader):
+    for batch_idx, (data, playvec, group, target) in enumerate(train_loader):
 
         data = data.to(device)
         target = target.to(device)
@@ -318,7 +383,9 @@ def train(model, epoch, log_interval):
 
         # print training stats
         if batch_idx % log_interval == 0:
-            print(f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}")
+            print(
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
+            )
 
         # update progress bar
         pbar.update(pbar_update)
@@ -349,7 +416,7 @@ def get_likely_index(tensor):
 def test(model, epoch):
     model.eval()
     correct = 0
-    for data,_, _, target in test_loader:
+    for data, _, _, target in test_loader:
 
         data = data.to(device)
         target = target.to(device)
@@ -364,7 +431,9 @@ def test(model, epoch):
         # update progress bar
         pbar.update(pbar_update)
 
-    print(f"\nTest Epoch: {epoch}\tAccuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset):.0f}%)\n")
+    print(
+        f"\nTest Epoch: {epoch}\tAccuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset):.0f}%)\n"
+    )
 
 
 ######################################################################
@@ -375,7 +444,7 @@ def test(model, epoch):
 #
 
 log_interval = 20
-n_epoch = 50
+n_epoch = 10
 
 pbar_update = 1 / (len(train_loader) + len(test_loader))
 losses = []
@@ -392,13 +461,11 @@ with tqdm(total=n_epoch) as pbar:
 # plt.plot(losses);
 # plt.title("training loss");
 
-
 ######################################################################
 # The network should be more than 65% accurate on the test set after 2
 # epochs, and 85% after 21 epochs. Let’s look at the last words in the
 # train set, and see how the model did on it.
 #
-
 
 # def predict(tensor):
 #     # Use the model to predict the label of the waveform
@@ -409,12 +476,10 @@ with tqdm(total=n_epoch) as pbar:
 #     tensor = index_to_label(tensor.squeeze())
 #     return tensor
 
-
 # waveform, sample_rate, utterance, *_ = train_set[-1]
 # ipd.Audio(waveform.numpy(), rate=sample_rate)
 
 # print(f"Expected: {utterance}. Predicted: {predict(waveform)}.")
-
 
 ######################################################################
 # Let’s find an example that isn’t classified correctly, if there is one.
@@ -432,13 +497,11 @@ with tqdm(total=n_epoch) as pbar:
 #     ipd.Audio(waveform.numpy(), rate=sample_rate)
 #     print(f"Data point #{i}. Expected: {utterance}. Predicted: {output}.")
 
-
 ######################################################################
 # Feel free to try with one of your own recordings of one of the labels!
 # For example, using Colab, say “Go” while executing the cell below. This
 # will record one second of audio and try to classify it.
 #
-
 
 # def record(seconds=1):
 
@@ -481,7 +544,6 @@ with tqdm(total=n_epoch) as pbar:
 #     filename = f"_audio.{fileformat}"
 #     AudioSegment.from_file(BytesIO(b)).export(filename, format=fileformat)
 #     return torchaudio.load(filename)
-
 
 ######################################################################
 # Conclusion

@@ -32,7 +32,6 @@ import IPython.display as ipd
 
 from tqdm import tqdm
 
-
 ######################################################################
 # Let’s check if a CUDA GPU is available and select our device. Running
 # the network on a GPU will greatly decrease the training/testing runtime.
@@ -40,7 +39,6 @@ from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
-
 
 ######################################################################
 # Importing the Dataset
@@ -69,20 +67,25 @@ import os
 
 
 class SubsetSC(SPEECHCOMMANDS):
+
     def __init__(self, subset: str = None):
         super().__init__("./", download=True)
 
         def load_list(filename):
             filepath = os.path.join(self._path, filename)
             with open(filepath) as fileobj:
-                return [os.path.normpath(os.path.join(self._path, line.strip())) for line in fileobj]
+                return [
+                    os.path.normpath(os.path.join(self._path, line.strip()))
+                    for line in fileobj
+                ]
 
         if subset == "validation":
             self._walker = load_list("validation_list.txt")
         elif subset == "testing":
             self._walker = load_list("testing_list.txt")
         elif subset == "training":
-            excludes = load_list("validation_list.txt") + load_list("testing_list.txt")
+            excludes = load_list("validation_list.txt") + load_list(
+                "testing_list.txt")
             excludes = set(excludes)
             self._walker = [w for w in self._walker if w not in excludes]
 
@@ -92,7 +95,6 @@ train_set = SubsetSC("training")
 test_set = SubsetSC("testing")
 
 waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
-
 
 ######################################################################
 # A data point in the SPEECHCOMMANDS dataset is a tuple made of a waveform
@@ -105,7 +107,6 @@ print("Sample rate of waveform: {}".format(sample_rate))
 
 # plt.plot(waveform.t().numpy());
 
-
 ######################################################################
 # Let’s find the list of labels available in the dataset.
 #
@@ -114,7 +115,6 @@ print('loading labels ')
 labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
 print('loading labels done')
 # labels
-
 
 ######################################################################
 # The 35 audio labels are commands that are said by users. The first few
@@ -127,14 +127,12 @@ print('loading labels done')
 # waveform_second, *_ = train_set[1]
 # ipd.Audio(waveform_second.numpy(), rate=sample_rate)
 
-
 ######################################################################
 # The last file is someone saying “visual”.
 #
 
 # waveform_last, *_ = train_set[-1]
 # ipd.Audio(waveform_last.numpy(), rate=sample_rate)
-
 
 ######################################################################
 # Formatting the Data
@@ -152,11 +150,11 @@ print('loading labels done')
 #
 
 new_sample_rate = 8000
-transform = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=new_sample_rate)
+transform = torchaudio.transforms.Resample(orig_freq=sample_rate,
+                                           new_freq=new_sample_rate)
 transformed = transform(waveform)
 
 # ipd.Audio(transformed.numpy(), rate=new_sample_rate)
-
 
 ######################################################################
 # We are encoding each word using its index in the list of labels.
@@ -180,7 +178,6 @@ word_recovered = index_to_label(index)
 
 print(word_start, "-->", index, "-->", word_recovered)
 
-
 ######################################################################
 # To turn a list of data point made of audio recordings and utterances
 # into two batched tensors for the model, we implement a collate function
@@ -197,7 +194,9 @@ print(word_start, "-->", index, "-->", word_recovered)
 def pad_sequence(batch):
     # Make all tensor in a batch the same length by padding with zeros
     batch = [item.t() for item in batch]
-    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
+    batch = torch.nn.utils.rnn.pad_sequence(batch,
+                                            batch_first=True,
+                                            padding_value=0.)
     return batch.permute(0, 2, 1)
 
 
@@ -247,7 +246,6 @@ test_loader = torch.utils.data.DataLoader(
     pin_memory=pin_memory,
 )
 
-
 ######################################################################
 # Define the Network
 # ------------------
@@ -267,9 +265,13 @@ test_loader = torch.utils.data.DataLoader(
 
 
 class M5(nn.Module):
+
     def __init__(self, n_input=1, n_output=35, stride=16, n_channel=32):
         super().__init__()
-        self.conv1 = nn.Conv1d(n_input, n_channel, kernel_size=80, stride=stride)
+        self.conv1 = nn.Conv1d(n_input,
+                               n_channel,
+                               kernel_size=80,
+                               stride=stride)
         self.bn1 = nn.BatchNorm1d(n_channel)
         self.pool1 = nn.MaxPool1d(4)
         self.conv2 = nn.Conv1d(n_channel, n_channel, kernel_size=3)
@@ -314,7 +316,6 @@ def count_parameters(model):
 n = count_parameters(model)
 print("Number of parameters: %s" % n)
 
-
 ######################################################################
 # We will use the same optimization technique used in the paper, an Adam
 # optimizer with weight decay set to 0.0001. At first, we will train with
@@ -323,8 +324,9 @@ print("Number of parameters: %s" % n)
 #
 
 optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0001)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)  # reduce the learning after 20 epochs by a factor of 10
-
+scheduler = optim.lr_scheduler.StepLR(
+    optimizer, step_size=20,
+    gamma=0.1)  # reduce the learning after 20 epochs by a factor of 10
 
 ######################################################################
 # Training and Testing the Network
@@ -358,7 +360,9 @@ def train(model, epoch, log_interval):
 
         # print training stats
         if batch_idx % log_interval == 0:
-            print(f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}")
+            print(
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
+            )
 
         # update progress bar
         pbar.update(pbar_update)
@@ -404,7 +408,9 @@ def test(model, epoch):
         # update progress bar
         pbar.update(pbar_update)
 
-    print(f"\nTest Epoch: {epoch}\tAccuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset):.0f}%)\n")
+    print(
+        f"\nTest Epoch: {epoch}\tAccuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset):.0f}%)\n"
+    )
 
 
 ######################################################################
@@ -432,7 +438,6 @@ with tqdm(total=n_epoch) as pbar:
 # plt.plot(losses);
 # plt.title("training loss");
 
-
 ######################################################################
 # The network should be more than 65% accurate on the test set after 2
 # epochs, and 85% after 21 epochs. Let’s look at the last words in the
@@ -455,7 +460,6 @@ ipd.Audio(waveform.numpy(), rate=sample_rate)
 
 print(f"Expected: {utterance}. Predicted: {predict(waveform)}.")
 
-
 ######################################################################
 # Let’s find an example that isn’t classified correctly, if there is one.
 #
@@ -471,7 +475,6 @@ else:
     print("In this case, let's just look at the last data point")
     ipd.Audio(waveform.numpy(), rate=sample_rate)
     print(f"Data point #{i}. Expected: {utterance}. Predicted: {output}.")
-
 
 ######################################################################
 # Feel free to try with one of your own recordings of one of the labels!
@@ -507,8 +510,7 @@ def record(seconds=1):
         b"    resolve(text)\n"
         b"  }\n"
         b"  recorder.stop()\n"
-        b"})"
-    )
+        b"})")
     RECORD = RECORD.decode("ascii")
 
     print(f"Recording started for {seconds} seconds.")
@@ -528,7 +530,6 @@ if "google.colab" in sys.modules:
     waveform, sample_rate = record()
     print(f"Predicted: {predict(waveform)}.")
     ipd.Audio(waveform.numpy(), rate=sample_rate)
-
 
 ######################################################################
 # Conclusion
