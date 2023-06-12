@@ -1,51 +1,71 @@
 # preliminary verification
 
-**assumption**: 
-1. exposed to high frequency for a long time, tinn subjects would have a different perception for high frequency target, compart to cntl subjects.
-2. if I am cntl, I am equally sensitive to high/low freq target. Tinn expresses unequal performance over the high/low freq target.
-   1. perhaps, more sensitive to high. perhaps not sensitive to high.
-3. compare 4 types of stimulus, 6 tasks all engaged.
-4. finegrained, 6 tasks, 2 times as a data point. (3 types. attend high.low.passive). Do experiments independnetly (seperate out the ROI **target**.)
+Target Mark:
+1 = 500 Hz; short duration standard tone
 
-attent high: see 5000 long duration?
+2 = 5000 Hz, short duration standard tone
 
-try both? 30 or 150. prediction, 150 more stable.
+3 = 500 Hz, long duration 
 
-4 stinulus * 3 tasks * 2 times (coule be merged).
-
-attend low: all 500hz are targets.
+4 = 5000 Hz, long duration 
 
 
 seed=0
 
-| settings       | dataset split | test accuracy (10 epochs) |
-| -------------- | ------------- | ------------------------- |
-| (0,1)          | all_set       |                           |
-| (1,0), lr=5e-4 | 5-7           | 94                        |
-| (1,0), lr=5e-4 | 5, -5         | 48                        |
-| (1,0), lr=5e-4 | 10, -5        | 59                        |
-| (1,0), lr=1e-2 | 5-10          | 68                        |
-| (1,0), lr=5e-4 | all_set       | 72                        |
-| (1,0), lr=1e-4 | all_set       | 63                        |
-| (1,0), lr=1e-4 | all_set       | 59                        |
-| (1,0), lr=1e-2 | all_set       | 68                        |
+dataset information for a 0 - 3
+```
+pos in training 1344                                                                                                
+pos in test 330                                           
+train dataset size: 2552, test set size: 638                                                                        
+```
+
+Train split ratio = 0.8
+
+| Att-HF(0) /Att-LF(1) | Tone ? (3)/Tone ? (4) | test accuracy (20 epochs) |
+| -------------------- | --------------------- | ------------------------- |
+| 0                    | 3                     | **599/638 (94%)**         |
+| 0                    | 4                     | 585/638 (92%)             |
+| 1                    | 3                     | **582/621 (94%)**         |
+| 1                    | 4                     | 578/621 (93%)             |
+
+Few shot validation
+
+| Train Ratio | Att-HF(0) | Tone ? (3) | test accuracy (20 epochs) |
+| ----------- | --------- | ---------- | ------------------------- |
+| 0.1         | 0         | 3          | 1849/2871 (64%)           |
+| 0.2         | 0         | 3          | 1757/2552 (69%)           |
+| 0.3         | 0         | 3          | 1656/2233 (74%)           |
+| 0.5         | 0         | 3          | 1283/1595 (80%)           |
+| 0.7         | 0         | 3          | 852/957 (89%)             |
+| 0.9         | 0         | 3          | 309/319 (97%)             |
+
+
+Async train setting, train ratio  = 0.8
+
+| train setting | test setting | test accuracy (20 epochs) |
+| ------------- | ------------ | ------------------------- |
+| 0-3           | 1-4          | 403/621 (65%)             |
+| 0-3           | 1-3          | 403/621 (65%)             |
+
+
+Check short tone, train split ratio = 0.8
+
+| Att-HF(0) /Att-LF(1) | Tone ? (3)/Tone ? (4) | test accuracy (20 epochs) |
+| -------------------- | --------------------- | ------------------------- |
+| 0                    | 1                     | 2885/3195 (90%)           |
+| 0                    | 2                     | **2999/3195 (94%)**       |
+| 1                    | 1                     | **2953/3105 (95.1%)**       |
+| 1                    | 2                     | 2937/3105 (94.5%)           |
 
 
 # problems
 
-1. ```Stand/BL_tinn_2-Stream_mcattn-2_sess1_set1_ICAREV.mat``` has (2,4) all epochs. others have 2,2
-    ```
-    (Pdb) sample_mat['allepochs'][0,0].shape
-    (240, 358, 64)
-    (Pdb) sample_mat['allepochs'][0,1].shape
-    (540, 358, 64)
-    (Pdb) sample_mat['allepochs'][1,0].shape
-    (1, 0)
-    (Pdb) sample_mat['allepochs'][1,1].shape
-    (540, 358, 64)
-    (Pdb) sample_mat['allepochs'][1,2].shape
-    (540, 358, 64)
+- [ ] Do ratio study for all combinations, draw a curve.
 
-    ```
+Test set, balanced split, cnl tinn 13. randomize (cntl random 13, more random seed.)
 
-2. 
+Split 5+5 for test, 8+8, split 1~8 for training. Draw a curve.
+
+5+5, random (train several random seed.)
+
+Also do this on short tones.

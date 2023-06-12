@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import random
 import gc
 import traceback
 import scipy
@@ -133,6 +134,7 @@ class EEG_Standard(torch.utils.data.Dataset):
             # subset='Stand',
             blk_idx=0,  # 0 for HF and 1 for LF
             tone_idx=3,  # 3 or 4
+            trian_split_ratio=0.8, # how many samples to use for training
             training=True):
         # denote tinn and cntl (label 1 and 0)? return all.
 
@@ -141,7 +143,8 @@ class EEG_Standard(torch.utils.data.Dataset):
         else:
             blk_name = 'Att-LF'
 
-        assert tone_idx in [3, 4]
+        # assert tone_idx in [3, 4]
+        assert tone_idx in [1,2,3, 4]
 
         dataset_path = Path(dataset_root)
         pos_ids = dataset_path.glob('*_tinn')
@@ -159,13 +162,20 @@ class EEG_Standard(torch.utils.data.Dataset):
         self.pos_file_paths = load_blk_tone(pos_ids)
         self.neg_file_paths = load_blk_tone(neg_idx)
 
+        # print('pos', len(self.pos_file_paths))
+        # print('neg', len(self.neg_file_paths))
+
         self.file_paths = [[fp, 0] for fp in self.neg_file_paths
                            ] + [[fp, 1] for fp in self.pos_file_paths]
 
+        random.shuffle(self.file_paths) # seed
+
         if training:
-            self.file_paths = self.file_paths[:-len(self.file_paths) // 5]
+            self.file_paths = self.file_paths[:int(len(self.file_paths) * trian_split_ratio)]
+            print('pos in training', len([fp for fp in self.file_paths if fp[1] == 1]))
         else:
-            self.file_paths = self.file_paths[-len(self.file_paths) // 5:]
+            self.file_paths = self.file_paths[int(len(self.file_paths) * trian_split_ratio):]
+            print('pos in test', len([fp for fp in self.file_paths if fp[1] == 1]))
 
     def __len__(self):
         return len(self.file_paths)

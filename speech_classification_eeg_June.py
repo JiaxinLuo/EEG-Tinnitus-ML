@@ -1,4 +1,4 @@
-from inspect import trace
+import random
 import sys
 import traceback
 import gc
@@ -22,21 +22,47 @@ print(device)
 
 torch.manual_seed(0)
 np.random.seed(0)
+random.seed(0)
 
 
-import os
+# import os
 
 # Create training and testing split of the data. We do not use validation in this tutorial.
 # train_set = EEGFull(training=True)
 # test_set = EEGFull(training=False)
 
-blk_idx=0
+
+train_blk_idx=0
+# train_blk_idx=1
 # blk_idx=1
-tone_idx=3
+# train_tone_idx=3
+train_tone_idx=4
+# train_tone_idx=1 # try short tones
+# train_tone_idx=2 # try short tones
 # tone_idx=4
 
-train_set = EEG_Standard(blk_idx=blk_idx, tone_idx=tone_idx, training=True)
-test_set = EEG_Standard(blk_idx=blk_idx, tone_idx=tone_idx, training=False)
+# trian_split_ratio=0.1 # how many samples to use for training
+# trian_split_ratio=0.2 # how many samples to use for training
+# trian_split_ratio=0.3 # how many samples to use for training
+trian_split_ratio=0.5 # how many samples to use for training
+# trian_split_ratio=0.7 # how many samples to use for training
+# trian_split_ratio=0.8 # how many samples to use for training
+# trian_split_ratio=0.9 # how many samples to use for training
+
+print(f'train_blk_idx: {train_blk_idx}, train_tone_idx: {train_tone_idx}')
+
+train_set = EEG_Standard(blk_idx=train_blk_idx, tone_idx=train_tone_idx, training=True, trian_split_ratio=trian_split_ratio)
+
+test_blk_idx = train_blk_idx
+test_tone_idx = train_tone_idx
+
+# test_blk_idx = 1 - train_blk_idx
+# test_tone_idx = 7 - train_tone_idx
+# test_tone_idx = train_tone_idx
+
+print(f'test_blk_idx: {test_blk_idx}, test_tone_idx: {test_tone_idx}')
+
+test_set = EEG_Standard(blk_idx=test_blk_idx, tone_idx=test_tone_idx, training=False, trian_split_ratio=trian_split_ratio)
 
 print(f'train dataset size: {len(train_set)}, test set size: {len(test_set)}')
 
@@ -49,7 +75,7 @@ print("Shape of waveform: {}".format(waveform.shape))  # 1, 16k
 batch_size = 32
 
 if device == "cuda":
-    num_workers = 1
+    num_workers = 2
     # num_workers = 0 # TODO
     pin_memory = True
 else:
@@ -236,7 +262,7 @@ def get_likely_index(tensor):
 def test(model, epoch):
     model.eval()
     correct = 0
-    for data, _, _, target in test_loader:
+    for data, target in test_loader:
 
         data = data.to(device)
         target = target.to(device)
@@ -252,7 +278,7 @@ def test(model, epoch):
         pbar.update(pbar_update)
 
     print(
-        f"\nTest Epoch: {epoch}\tAccuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset):.0f}%)\n"
+        f"\nTest Epoch: {epoch}\tAccuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset):.2f}%)\n"
     )
 
 
@@ -264,7 +290,8 @@ def test(model, epoch):
 #
 
 log_interval = 20
-n_epoch = 10
+# n_epoch = 10
+n_epoch = 20
 
 pbar_update = 1 / (len(train_loader) + len(test_loader))
 losses = []
