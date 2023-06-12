@@ -69,3 +69,5 @@ Split 5+5 for test, 8+8, split 1~8 for training. Draw a curve.
 5+5, random (train several random seed.)
 
 Also do this on short tones.
+
+Hi!
