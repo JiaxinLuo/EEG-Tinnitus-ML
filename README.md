@@ -50,6 +50,8 @@ Async train setting, train ratio  = 0.8
 
 Check short tone, train split ratio = 0.8
 
+training: 270*(17+13)*2*0.8 = 12960
+
 | Att-HF(0) /Att-LF(1) | Tone ? (3)/Tone ? (4) | test accuracy (20 epochs) |
 | -------------------- | --------------------- | ------------------------- |
 | 0                    | 1                     | 2885/3195 (90%)           |
