@@ -6,9 +6,9 @@ Target Mark:
 
 2 = 5000 Hz, short duration standard tone
 
-3 = 500 Hz, long duration 
+3 = 500 Hz, long duration deviant tone
 
-4 = 5000 Hz, long duration 
+4 = 5000 Hz, long duration deviant tone
 
 ![image](https://github.com/NIRVANALAN/EEG-Tinnitus-ML/assets/63215082/6832562d-8ae3-4cce-b67b-6aef286e21d1)
 
@@ -53,7 +53,7 @@ Async train setting, train ratio  = 0.8
 | 0-3           | 1-3          | 403/621 (65%)             |
 
 
-Check short tone (deviant), train split ratio = 0.8
+Check short tone (standard), train split ratio = 0.8
 
 ```
 training: 270*(17+13)*2*0.8 = 12960
@@ -67,7 +67,7 @@ test: 270*(17+13)*2*0.2 = 3240
 | 1                    | 1                     | **2953/3105 (95.1%)**       |
 | 1                    | 2                     | **2937/3105 (94.5%)**       |
 
-For Dev tone ERP, when INSTRUCTION is to Att-LF, more discrimination
+For Std tone ERP, when INSTRUCTION is to Att-LF, more discrimination
 
 # problems
 
@@ -79,4 +79,4 @@ Random split 5+5 for test, 8+8, random split 1~8 for training. Draw a curve.
 
 5+5, random (train several random seed.)
 
-Also do this on short tones(deviant, more trial data).
+Also do this on short tones(standard, more trial data).
