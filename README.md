@@ -9,6 +9,7 @@ Target Mark:
 
 4 = 5000 Hz, long duration 
 
+![image](https://github.com/NIRVANALAN/EEG-Tinnitus-ML/assets/63215082/6832562d-8ae3-4cce-b67b-6aef286e21d1)
 
 seed=0
 
