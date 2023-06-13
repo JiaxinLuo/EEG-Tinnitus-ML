@@ -23,7 +23,7 @@ train dataset size: 2552, test set size: 638
 
 Train split ratio = 0.8
 
-| Att-HF(0) /Att-LF(1) | Tone ? (3)/Tone ? (4) | test accuracy (20 epochs) |
+| Att-HF(0) /Att-LF(1) | Std L (3)/Std H (4) | test accuracy (20 epochs) |
 | -------------------- | --------------------- | ------------------------- |
 | Att-HF                    | 3                     | **599/638 (94%)**         |
 | Att-HF                    | 4                     | 585/638 (92%)             |
