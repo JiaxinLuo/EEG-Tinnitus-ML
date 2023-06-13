@@ -1,6 +1,7 @@
 # preliminary verification
 
 Target Mark:
+
 1 = 500 Hz; short duration standard tone
 
 2 = 5000 Hz, short duration standard tone
