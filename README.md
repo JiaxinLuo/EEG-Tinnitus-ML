@@ -31,7 +31,7 @@ Train split ratio = 0.8
 | Att-LF                    | 3                     | **582/621 (93.7%)**         |
 | Att-LF                    | 4                     | 578/621 (93.1%)             |
 
-For Dev tone ERP, when EEG auditory stimulus is low frequency, more discrimination
+For Dev (long duration: require click response) tone ERP, when EEG auditory stimulus is low frequency, more discrimination
 
 Few shot validation
 
@@ -67,7 +67,7 @@ test: 270*(17+13)*2*0.2 = 3240
 | 1                    | 1                     | **2953/3105 (95.1%)**       |
 | 1                    | 2                     | **2937/3105 (94.5%)**       |
 
-For Std tone ERP, when INSTRUCTION is to Att-LF, more discrimination
+For Std tone (short duration: require no response) ERP, when INSTRUCTION is to Att-LF, more discrimination
 
 # problems
 
