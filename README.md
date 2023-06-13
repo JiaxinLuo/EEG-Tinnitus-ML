@@ -16,8 +16,8 @@ seed=0
 
 dataset information for a 0 - 3
 ```
-pos in training 1344                                                                                                
-pos in test 330                                           
+pos in training 1344   [30*(17+13)*2*0.8]                                                                                             
+pos in test 330        [30*(17+13)*2*0.2]                                     
 train dataset size: 2552, test set size: 638                                                                        
 ```
 
