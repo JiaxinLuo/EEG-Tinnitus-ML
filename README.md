@@ -56,8 +56,8 @@ Async train setting, train ratio  = 0.8
 Check short tone (standard), train split ratio = 0.8
 
 ```
-training: 270*(17+13)*2*0.8 = 12960
-test: 270*(17+13)*2*0.2 = 3240
+pos in training: 270*(17+13)*2*0.8 = 12960
+pos in testing: 270*(17+13)*2*0.2 = 3240
 ```
 
 | Att-HF(0) /Att-LF(1) | Std L (1)/Std H (2) | test accuracy (20 epochs) |
