@@ -69,7 +69,7 @@ pos in testing: 270*(17+13)*2*0.2 = 3240
 
 For Std tone (short duration: require no response) ERP, when INSTRUCTION is to Att-LF, more discrimination
 
-# problems
+# problems (To-do)
 
 - [ ] Do ratio study for all combinations, draw a curve.
 
