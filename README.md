@@ -80,3 +80,19 @@ Random split 5+5 for test, 8+8, random split 1~8 for training. Draw a curve.
 5+5, random (train several random seed.)
 
 Also do this on short tones(standard, more trial data).
+
+- [ ] Section EEG input based on time ranges:
+| Baseline | P1 | N1 | P2 | SN |
+| -------- | -- | -- | -- | -- |
+| -200~0 | 30~80 | 60~150 | 150~250 | 300~600 |
+
+- [ ] Section EEG input based on channels:
+Temporal Lobe (Auditory Cortex):
+24,25,26,30,31,32;
+34,35,36,40,41,42;
+44,45,46,50,51,52;
+
+Frontal Lobe:
+9,10,11
+18,19,20
+27,28,29
