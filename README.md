@@ -83,6 +83,8 @@ Also do this on short tones(standard, more trial data).
 
 - [ ] Section EEG input based on time ranges:
 
+or running window
+
 | Baseline | P1 | N1 | P2 | SN |
 | -------- | -- | -- | -- | -- |
 | -200~0 | 30~80 | 60~150 | 150~250 | 300~600 |
