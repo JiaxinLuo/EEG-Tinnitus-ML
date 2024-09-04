@@ -134,7 +134,7 @@ class EEG_Standard(torch.utils.data.Dataset):
             # subset='Stand',
             blk_idx=0,  # 0 for HF and 1 for LF
             tone_idx=3,  # 3 or 4
-            trian_split_ratio=0.8, # how many samples to use for training
+            train_split_ratio=0.8, # how many samples to use for training
             training=True):
         # denote tinn and cntl (label 1 and 0)? return all.
 
@@ -171,10 +171,10 @@ class EEG_Standard(torch.utils.data.Dataset):
         random.shuffle(self.file_paths) # seed
 
         if training:
-            self.file_paths = self.file_paths[:int(len(self.file_paths) * trian_split_ratio)]
+            self.file_paths = self.file_paths[:int(len(self.file_paths) * train_split_ratio)]
             print('pos in training', len([fp for fp in self.file_paths if fp[1] == 1]))
         else:
-            self.file_paths = self.file_paths[int(len(self.file_paths) * trian_split_ratio):]
+            self.file_paths = self.file_paths[int(len(self.file_paths) * train_split_ratio):]
             print('pos in test', len([fp for fp in self.file_paths if fp[1] == 1]))
 
     def __len__(self):
