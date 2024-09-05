@@ -22,7 +22,7 @@ class EEGSubset(torch.utils.data.Dataset):
 
     def __init__(self):
         dataset_root = Path(
-            '/mnt/lustre/OneDrive/sensetime-server-mirror/EEG-Data/Preprocessed-upload'
+            '/mnt/lustre/OneDrive/sensetime-server-mirror/EEG-Data/Preprocessed-upload' ##change to your own
         ) / 'Stand'
         tinn_samples = ['AS_tinn_500and5kHz_mcattn-2_sess1_set1_ICAREV.mat']
         cntl_samples = ['BH_cntl_2-Stream_mcattn-2_sess1_set1_ICAREV.mat']
