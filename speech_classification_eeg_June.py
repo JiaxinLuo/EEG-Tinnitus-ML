@@ -62,7 +62,7 @@ test_tone_idx = train_tone_idx
 
 print(f'test_blk_idx: {test_blk_idx}, test_tone_idx: {test_tone_idx}')
 
-test_set = EEG_Standard(blk_idx=test_blk_idx, tone_idx=test_tone_idx, training=False, trian_split_ratio=trian_split_ratio)
+test_set = EEG_Standard(blk_idx=test_blk_idx, tone_idx=test_tone_idx, training=False, train_split_ratio=train_split_ratio)
 
 print(f'train dataset size: {len(train_set)}, test set size: {len(test_set)}')
 
