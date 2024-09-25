@@ -41,17 +41,17 @@ train_tone_idx=4
 # train_tone_idx=2 # try short tones
 # tone_idx=4
 
-# trian_split_ratio=0.1 # how many samples to use for training
-# trian_split_ratio=0.2 # how many samples to use for training
-# trian_split_ratio=0.3 # how many samples to use for training
-trian_split_ratio=0.5 # how many samples to use for training
-# trian_split_ratio=0.7 # how many samples to use for training
-# trian_split_ratio=0.8 # how many samples to use for training
-# trian_split_ratio=0.9 # how many samples to use for training
+# train_split_ratio=0.1 # how many samples to use for training
+# train_split_ratio=0.2 # how many samples to use for training
+# train_split_ratio=0.3 # how many samples to use for training
+train_split_ratio=0.5 # how many samples to use for training
+# train_split_ratio=0.7 # how many samples to use for training
+# train_split_ratio=0.8 # how many samples to use for training
+# train_split_ratio=0.9 # how many samples to use for training
 
 print(f'train_blk_idx: {train_blk_idx}, train_tone_idx: {train_tone_idx}')
 
-train_set = EEG_Standard(blk_idx=train_blk_idx, tone_idx=train_tone_idx, training=True, trian_split_ratio=trian_split_ratio)
+train_set = EEG_Standard(blk_idx=train_blk_idx, tone_idx=train_tone_idx, training=True, train_split_ratio=train_split_ratio)
 
 test_blk_idx = train_blk_idx
 test_tone_idx = train_tone_idx
